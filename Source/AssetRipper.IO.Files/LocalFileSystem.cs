@@ -17,7 +17,12 @@ public partial class LocalFileSystem : FileSystem
 		public override void Delete(string path) => System.IO.Directory.Delete(path, true);
 	}
 
-	public static string ExecutingDirectory => AppContext.BaseDirectory;
+	/// <summary>
+	/// Hosts like Android, where <see cref="AppContext.BaseDirectory"/> is read-only, can redirect all app data here.
+	/// </summary>
+	public static string? ExecutingDirectoryOverride { get; set; }
+
+	public static string ExecutingDirectory => ExecutingDirectoryOverride ?? AppContext.BaseDirectory;
 
 	private string LocalTemporaryDirectory => Path.Join(ExecutingDirectory, "temp", GetRandomString()[0..4]);
 

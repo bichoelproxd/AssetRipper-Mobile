@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0-android</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+		<ApplicationId>com.assetripper.mobile</ApplicationId>
+		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>$(VersionPrefix)</ApplicationDisplayVersion>
+		<RootNamespace>AssetRipper.Mobile</RootNamespace>
+		<AssemblyName>AssetRipper.GUI.Android</AssemblyName>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+		<RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+		<!-- NativeAOT / server GC are desktop-only choices. -->
+		<IsAotCompatible>false</IsAotCompatible>
+		<PublishAot>false</PublishAot>
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<AndroidUseAapt2>true</AndroidUseAapt2>
+		<EnableLLVM>false</EnableLLVM>
+		<!-- The shared libraries lean on reflection-heavy decompiler code; keep trimming conservative. -->
+		<PublishTrimmed>false</PublishTrimmed>
+		<OutputPath>..\0Bins\AssetRipper.GUI.Android\$(Configuration)\</OutputPath>
+		<IntermediateOutputPath>..\0Bins\obj\AssetRipper.GUI.Android\$(Configuration)\</IntermediateOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AssetRipper.GUI.Web\AssetRipper.GUI.Web.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+</Project>

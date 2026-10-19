@@ -42,7 +42,7 @@ public static class Commands
 			{
 				paths = values;
 			}
-			else if (NativeDialog.Supported)
+			else if (Dialogs.NativeSupported)
 			{
 				paths = await OpenFileDialog.OpenFiles();
 			}
@@ -70,7 +70,7 @@ public static class Commands
 			{
 				paths = values;
 			}
-			else if (NativeDialog.Supported)
+			else if (Dialogs.NativeSupported)
 			{
 				paths = await OpenFolderDialog.OpenFolders();
 			}
