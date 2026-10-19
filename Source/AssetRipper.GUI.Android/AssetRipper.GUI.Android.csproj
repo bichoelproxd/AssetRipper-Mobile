@@ -13,7 +13,6 @@
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 		<!-- Universal APK: one package containing both 64-bit and 32-bit ARM. -->
 		<RuntimeIdentifiers>android-arm64;android-arm</RuntimeIdentifiers>
-		<AndroidSupportedAbis>arm64-v8a;armeabi-v7a</AndroidSupportedAbis>
 		<!-- NativeAOT / server GC are desktop-only choices. -->
 		<IsAotCompatible>false</IsAotCompatible>
 		<PublishAot>false</PublishAot>

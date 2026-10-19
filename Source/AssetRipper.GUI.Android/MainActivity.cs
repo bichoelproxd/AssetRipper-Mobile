@@ -19,6 +19,7 @@ using AssetRipper.GUI.Web;
 using AssetRipper.Import.Logging;
 using AssetRipper.IO.Files;
 using AUri = Android.Net.Uri;
+using Path = System.IO.Path;
 
 namespace AssetRipper.Mobile;
 
