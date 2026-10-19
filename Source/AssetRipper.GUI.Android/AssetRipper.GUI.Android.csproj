@@ -33,8 +33,24 @@
 		<ProjectReference Include="..\AssetRipper.GUI.Web\AssetRipper.GUI.Web.csproj" />
 	</ItemGroup>
 
+	<!--
+		Microsoft does not publish an ASP.NET Core runtime pack for Android (NETSDK1082).
+		The ASP.NET Core assemblies are plain managed code, so we download the linux-x64 pack
+		(only for its portable .dll files) and bundle them inside the APK ourselves.
+	-->
+	<PropertyGroup>
+		<DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
+		<AspNetPackVersion>$(BundledNETCoreAppPackageVersion)</AspNetPackVersion>
+		<AspNetPackDir>$(NuGetPackageRoot)microsoft.aspnetcore.app.runtime.linux-x64/$(AspNetPackVersion)/runtimes/linux-x64/lib/net10.0/</AspNetPackDir>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageDownload Include="Microsoft.AspNetCore.App.Runtime.linux-x64" Version="[$(AspNetPackVersion)]" />
+	</ItemGroup>
+
+	<ItemGroup Condition="Exists('$(AspNetPackDir)')">
+		<AspNetAssembly Include="$(AspNetPackDir)*.dll" />
+		<Reference Include="@(AspNetAssembly)" Private="true" />
 	</ItemGroup>
 
 </Project>
