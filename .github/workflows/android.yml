@@ -34,16 +34,23 @@ jobs:
             -dname "CN=AssetRipper Mobile"
 
       - name: Build APK
-        run: >
-          dotnet publish Source/AssetRipper.GUI.Android/AssetRipper.GUI.Android.csproj
-          -c Release -f net10.0-android
-          -p:RuntimeIdentifiers="android-arm64;android-arm"
-          -p:AndroidSupportedAbis="arm64-v8a;armeabi-v7a"
-          -p:AndroidKeyStore=true
-          -p:AndroidSigningKeyStore=$RUNNER_TEMP/assetripper.keystore
-          -p:AndroidSigningKeyAlias=assetripper
-          -p:AndroidSigningKeyPass=assetripper
-          -p:AndroidSigningStorePass=assetripper
+        shell: bash
+        run: |
+          set +e
+          dotnet publish Source/AssetRipper.GUI.Android/AssetRipper.GUI.Android.csproj \
+            -c Release -f net10.0-android \
+            -p:RuntimeIdentifiers="android-arm64;android-arm" \
+            -p:AndroidSupportedAbis="arm64-v8a;armeabi-v7a" \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore=$RUNNER_TEMP/assetripper.keystore \
+            -p:AndroidSigningKeyAlias=assetripper \
+            -p:AndroidSigningKeyPass=assetripper \
+            -p:AndroidSigningStorePass=assetripper 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" != "0" ]; then
+            grep -E "error [A-Za-z]+[0-9]+|: error " build.log | sort -u | head -15 | cut -c1-400 | while read -r l; do echo "::error::$l"; done
+          fi
+          exit $code
 
       - name: Collect APK
         run: |
