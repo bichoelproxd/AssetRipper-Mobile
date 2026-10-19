@@ -24,6 +24,8 @@
 		<EnableLLVM>false</EnableLLVM>
 		<!-- The shared libraries lean on reflection-heavy decompiler code; keep trimming conservative. -->
 		<PublishTrimmed>false</PublishTrimmed>
+		<RunAOTCompilation>false</RunAOTCompilation>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
 		<OutputPath>..\0Bins\AssetRipper.GUI.Android\$(Configuration)\</OutputPath>
 		<IntermediateOutputPath>..\0Bins\obj\AssetRipper.GUI.Android\$(Configuration)\</IntermediateOutputPath>
 	</PropertyGroup>
