@@ -156,7 +156,7 @@ public class MainActivity : Activity
 		logScroll.AddView(logText);
 		column.AddView(logScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, Dp(240)) { TopMargin = Dp(6) });
 
-		column.AddView(MakeText("Los archivos exportados quedan en Descargas/AssetRipper. AssetRipper es software libre (GPL-3.0).", 11, TextMuted, topMargin: 14));
+		column.AddView(MakeText("Las exportaciones se guardan como ZIP en Descargas/AssetRipper (en Android 9 o menor: Android/data/com.assetripper.mobile/files/Download). AssetRipper es software libre (GPL-3.0).", 11, TextMuted, topMargin: 14));
 
 		webContainer = new LinearLayout(this) { Orientation = Orientation.Vertical };
 		webContainer.Visibility = ViewStates.Gone;
@@ -448,10 +448,10 @@ public class MainActivity : Activity
 			});
 			SetStatus("Comprimiendo en Descargas…");
 			string zipName = $"AssetRipper_{DateTime.Now:yyyyMMdd_HHmmss}.zip";
-			await Task.Run(() => ZipToDownloads(folder, zipName));
+			string where = await Task.Run(() => ZipToDownloads(folder, zipName));
 			try { Directory.Delete(folder, true); } catch (IOException) { }
-			SetBusy(false, $"Listo: Descargas/AssetRipper/{zipName}");
-			RunOnUiThread(() => Toast.MakeText(this, "Guardado en Descargas/AssetRipper", ToastLength.Long)!.Show());
+			SetBusy(false, $"Listo: {where}");
+			RunOnUiThread(() => Toast.MakeText(this, "Guardado: " + where, ToastLength.Long)!.Show());
 		}
 		catch (Exception ex)
 		{
@@ -460,23 +460,41 @@ public class MainActivity : Activity
 		}
 	}
 
-	private void ZipToDownloads(string folder, string zipName)
+	private string ZipToDownloads(string folder, string zipName)
 	{
-		ContentValues values = new();
-		values.Put(MediaStore.IMediaColumns.DisplayName, zipName);
-		values.Put(MediaStore.IMediaColumns.MimeType, "application/zip");
-		values.Put(MediaStore.IMediaColumns.RelativePath, Android.OS.Environment.DirectoryDownloads + "/AssetRipper");
-		AUri uri = ContentResolver!.Insert(MediaStore.Downloads.ExternalContentUri!, values) ?? throw new IOException("MediaStore refused the file");
-		using Stream output = ContentResolver.OpenOutputStream(uri) ?? throw new IOException("Cannot write to Downloads");
-		using ZipArchive zip = new(output, ZipArchiveMode.Create);
-		foreach (string file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+		Stream output;
+		string location;
+		if (OperatingSystem.IsAndroidVersionAtLeast(29))
 		{
-			string entryName = Path.GetRelativePath(folder, file).Replace('\\', '/');
-			ZipArchiveEntry entry = zip.CreateEntry(entryName, CompressionLevel.Fastest);
-			using Stream entryStream = entry.Open();
-			using Stream input = File.OpenRead(file);
-			input.CopyTo(entryStream);
+			ContentValues values = new();
+			values.Put(MediaStore.IMediaColumns.DisplayName, zipName);
+			values.Put(MediaStore.IMediaColumns.MimeType, "application/zip");
+			values.Put(MediaStore.IMediaColumns.RelativePath, Android.OS.Environment.DirectoryDownloads + "/AssetRipper");
+			AUri uri = ContentResolver!.Insert(MediaStore.Downloads.ExternalContentUri!, values) ?? throw new IOException("MediaStore refused the file");
+			output = ContentResolver.OpenOutputStream(uri) ?? throw new IOException("Cannot write to Downloads");
+			location = "Descargas/AssetRipper/" + zipName;
 		}
+		else
+		{
+			// Android 7-9: no MediaStore.Downloads, so use the app's own external folder (no permission needed).
+			Java.IO.File dir = GetExternalFilesDir(Android.OS.Environment.DirectoryDownloads) ?? FilesDir!;
+			string target = Path.Join(dir.AbsolutePath, zipName);
+			output = File.Create(target);
+			location = target;
+		}
+		using (output)
+		using (ZipArchive zip = new(output, ZipArchiveMode.Create))
+		{
+			foreach (string file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+			{
+				string entryName = Path.GetRelativePath(folder, file).Replace('\\', '/');
+				ZipArchiveEntry entry = zip.CreateEntry(entryName, CompressionLevel.Fastest);
+				using Stream entryStream = entry.Open();
+				using Stream input = File.OpenRead(file);
+				input.CopyTo(entryStream);
+			}
+		}
+		return location;
 	}
 
 	private void ResetLoaded()
