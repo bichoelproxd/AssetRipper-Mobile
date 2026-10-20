@@ -7,6 +7,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -57,7 +60,28 @@ jobs:
           ls -lh dist
           unzip -l dist/AssetRipper-universal.apk | grep -E "lib/(arm64-v8a|armeabi-v7a)/libmonodroid|libcoreclr|libSystem.Native" | head
 
+      - name: Verify APK
+        run: |
+          APK=dist/AssetRipper-universal.apk
+          ABIS=$(unzip -Z1 $APK | grep -oE '^lib/[^/]+/' | sort -u | tr '\n' ' ')
+          ASP=$(unzip -Z1 $APK | grep -c 'Microsoft.AspNetCore' || true)
+          SIZE=$(du -h $APK | cut -f1)
+          echo "::notice::APK $SIZE | ABIs: $ABIS | AspNetCore entries: $ASP"
+          echo "$ABIS" | grep -q arm64-v8a
+          echo "$ABIS" | grep -q armeabi-v7a
+
       - uses: actions/upload-artifact@v5
         with:
           name: AssetRipper-Android-apk
           path: dist/*.apk
+
+      - name: Publish release
+        if: github.ref == 'refs/heads/android' || github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest dist/AssetRipper-universal.apk \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "AssetRipper Android (universal APK)" \
+            --notes "APK universal (arm64-v8a + armeabi-v7a). Compilado automaticamente desde $GITHUB_SHA."
